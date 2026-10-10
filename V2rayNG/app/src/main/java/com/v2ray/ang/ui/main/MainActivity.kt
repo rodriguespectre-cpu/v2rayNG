@@ -1,6 +1,7 @@
 package com.v2ray.ang.ui.main
 
 import android.content.Intent
+import com.v2ray.ang.spectre.SpectreActivity
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
@@ -146,6 +147,7 @@ class MainActivity : HelperBaseComponentActivity() {
             MainDestination.Logcat -> Intent(this, LogcatActivity::class.java)
             MainDestination.CheckUpdate -> Intent(this, CheckUpdateActivity::class.java)
             MainDestination.BackupRestore -> Intent(this, BackupActivity::class.java)
+            MainDestination.SpectreVPN -> Intent(this, SpectreActivity::class.java)
             MainDestination.About -> Intent(this, AboutActivity::class.java)
             MainDestination.Promotion -> {
                 Utils.openUri(
