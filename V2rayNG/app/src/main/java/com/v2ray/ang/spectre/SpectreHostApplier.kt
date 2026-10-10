@@ -38,9 +38,15 @@ object SpectreHostApplier {
         }
 
         // Accepter un nom d'hôte valide ou une adresse IP.
-        val validHost =
-            Utils.isValidUrl(newHost) ||
-            Utils.isPureIpAddress(newHost)
+        val hostnamePattern = Regex(
+    "(?i)^(?=.{1,253}$)" +
+        "[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?" +
+        "(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$"
+)
+
+val validHost =
+    hostnamePattern.matches(newHost) ||
+    Utils.isPureIpAddress(newHost)
 
         if (!validHost) {
             return SpectreHostApplyResult(
