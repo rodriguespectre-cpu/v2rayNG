@@ -13,6 +13,7 @@ android {
         applicationId = "com.v2ray.ang"
         minSdk = 24
         targetSdk = 37
+        buildConfigField("String", "SPECTRE_WEBHOOK_URL", "\"\"")
         versionCode = 750
         versionName = "2.3.10"
 
