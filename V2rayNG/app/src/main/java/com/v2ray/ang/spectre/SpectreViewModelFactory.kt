@@ -18,7 +18,11 @@ class SpectreViewModelFactory(
         modelClass: Class<T>
     ): T {
         if (modelClass.isAssignableFrom(SpectreViewModel::class.java)) {
-            return SpectreViewModel(api, store) as T
+            return SpectreViewModel(
+                context = appContext,
+                api = api,
+                store = store
+            ) as T
         }
 
         throw IllegalArgumentException(
