@@ -1,5 +1,6 @@
 package com.v2ray.ang.spectre
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -7,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException
+import java.util.Locale
 
 /**
  * État de l'espace client SpectreVPN.
@@ -22,14 +23,15 @@ data class SpectreUiState(
 )
 
 /**
- * Coordonne les appels API et les informations du compte.
- *
- * Ce ViewModel ne modifie pas encore le moteur Xray.
+ * Coordonne le compte SpectreVPN et l'application du host.
  */
 class SpectreViewModel(
+    context: Context,
     private val api: SpectreApi,
     private val store: SpectreClientStore
 ) : ViewModel() {
+
+    private val appContext = context.applicationContext
 
     private val _uiState = MutableStateFlow(SpectreUiState())
 
@@ -37,7 +39,7 @@ class SpectreViewModel(
         _uiState.asStateFlow()
 
     /**
-     * Vérifie le token auprès de Bots.Business.
+     * Vérifie le token auprès du serveur.
      */
     fun login(token: String) {
         val cleanedToken = token.trim()
@@ -60,7 +62,6 @@ class SpectreViewModel(
             try {
                 val client = api.verifyToken(cleanedToken)
 
-                // Sauvegarder uniquement après une vérification réussie.
                 store.saveToken(cleanedToken)
                 store.saveClient(client)
 
@@ -72,7 +73,7 @@ class SpectreViewModel(
                     message = "Abonnement vérifié avec succès."
                 )
 
-                // Récupérer ensuite le Host.
+                // Récupère le host et tente de l'appliquer.
                 refreshHost()
 
             } catch (e: CancellationException) {
@@ -91,18 +92,39 @@ class SpectreViewModel(
     }
 
     /**
-     * Récupère le Host depuis Bots.Business.
+     * Récupère le host et tente de l'appliquer au profil sélectionné.
      */
     fun refreshHost() {
         viewModelScope.launch {
             try {
-                val host = api.getHost()
+                val receivedHost = api.getHost().trim()
 
-                store.saveHost(host)
+                if (receivedHost.isBlank()) {
+                    throw IllegalStateException(
+                        "Le serveur n'a fourni aucun host."
+                    )
+                }
+
+                // Applique le host au profil VLESS sélectionné.
+                val result = SpectreHostApplier.applyHost(
+                    context = appContext,
+                    receivedHost = receivedHost
+                )
+
+                if (!result.success) {
+                    _uiState.value = _uiState.value.copy(
+                        error = result.message,
+                        message = null
+                    )
+                    return@launch
+                }
+
+                store.saveHost(receivedHost)
 
                 _uiState.value = _uiState.value.copy(
-                    host = host,
-                    error = null
+                    host = receivedHost,
+                    error = null,
+                    message = result.message
                 )
 
             } catch (e: CancellationException) {
@@ -110,17 +132,15 @@ class SpectreViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     error = e.message
-                        ?: "Impossible de récupérer le Host."
+                        ?: "Impossible de récupérer le host.",
+                    message = null
                 )
             }
         }
     }
 
     /**
-     * Recharge le compte enregistré localement.
-     *
-     * Cette méthode ne remplace pas la vérification
-     * en ligne de l'abonnement.
+     * Recharge la session locale puis vérifie le compte en ligne.
      */
     fun restoreLocalSession() {
         val token = store.getToken()
@@ -152,7 +172,7 @@ class SpectreViewModel(
      */
     fun formatGo(octets: Long): String {
         return String.format(
-            java.util.Locale.FRANCE,
+            Locale.FRANCE,
             "%.2f Go",
             octets.toDouble() / 1_073_741_824.0
         )
