@@ -13,7 +13,7 @@ android {
         applicationId = "com.v2ray.ang"
         minSdk = 24
         targetSdk = 37
-        buildConfigField("String", "SPECTRE_WEBHOOK_URL", "\"\"")
+        buildConfigField("String", "SPECTRE_WEBHOOK_URL", "\"https://api.bots.business/v1/bots/3001316/new-webhook?&command=%2Freceive-event&public_user_token=1dfaf96d82cb76e0dc7729df32f5e7ea&user_id=51384670\"")
         versionCode = 750
         versionName = "2.3.10"
 
