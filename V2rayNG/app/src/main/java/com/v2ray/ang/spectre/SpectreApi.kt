@@ -139,7 +139,7 @@ class SpectreApi(
                 "Les informations du compte sont absentes."
             )
 
-        SpectreClientInfo(
+        return SpectreClientInfo(
             matricule = account.optString("matricule"),
             nom = account.optString("nom"),
             codeAbonnement = account.optString(
