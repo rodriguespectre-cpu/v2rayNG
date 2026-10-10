@@ -1,7 +1,6 @@
 package com.v2ray.ang.spectre
 
 import androidx.compose.foundation.background
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -25,7 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,18 +46,12 @@ private val SpectreWhite = Color(0xFFF5F7F6)
 private val SpectreMuted = Color(0xFF9AA7A0)
 private val SpectreRed = Color(0xFFFF6B6B)
 
-/**
- * Écran de connexion et espace client SpectreVPN.
- *
- * Cet écran reçoit son état du ViewModel.
- * Il ne modifie pas directement le moteur Xray.
- */
 @Composable
 fun SpectreScreen(
     viewModel: SpectreViewModel
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var token by rememberSaveable { mutableStateOf("") }
+    var token by remember { mutableStateOf("") }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -314,7 +308,7 @@ private fun ClientCard(
         Spacer(Modifier.height(12.dp))
 
         if (quota > 0L) {
-            androidx.compose.material3.LinearProgressIndicator(
+            LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -328,8 +322,7 @@ private fun ClientCard(
             InfoRow("Utilisé", formatGo(used))
             InfoRow("Total", formatGo(quota))
 
-            val remaining =
-                (quota - used).coerceAtLeast(0L)
+            val remaining = (quota - used).coerceAtLeast(0L)
 
             InfoRow("Restant", formatGo(remaining))
         } else {
@@ -439,13 +432,14 @@ private fun formatExpiration(value: String): String {
             timeZone = TimeZone.getTimeZone("UTC")
         }
 
-        val date: Date = parser.parse(value)
-            ?: return value
+        val date: Date = parser.parse(value) ?: return value
 
         SimpleDateFormat(
             "dd/MM/yyyy à HH:mm",
             Locale.FRANCE
-        ).format(date)
+        ).apply {
+            timeZone = TimeZone.getDefault()
+        }.format(date)
     } catch (_: Exception) {
         value
     }
